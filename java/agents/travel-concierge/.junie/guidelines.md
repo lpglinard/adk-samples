@@ -1,5 +1,9 @@
 Project: Travel Concierge (Google ADK sample)
 
+Scope Restriction (Critical)
+- THIS IS A BIG SET OF SAMPLES OF ADK. We are currently developing java/agents/travel-concierge so do not write files on other folders, only write on java/agents/travel-concierge and its sub-folders.
+- Rationale: The repository contains many independent samples; to avoid cross-sample interference and unintended changes, confine edits to this agent’s directory tree.
+
 Scope
 - Advanced developer notes to build, test, and extend this sample agent. This repo demonstrates using Google ADK to build a travel concierge agent exposed via the Dev UI. All user interaction is intended to happen through google-adk-dev’s DEV-UI.
 
@@ -10,13 +14,13 @@ Environment and Build
 - LLM access: The sample references model "gemini-2.0-flash". Set your Google GenAI API key in the environment so ADK/GenAI can auth (e.g., export GOOGLE_API_KEY=... or equivalent for your shell). Refer to your organization’s credential distribution and the google-adk/genai docs to confirm the exact variable name and auth mechanism in your environment.
 
 Project Layout and Conventions
-- Root agent: org.example.agents.multitool.MultiToolAgent defines a public static final BaseAgent ROOT_AGENT. This is a convention used by google-adk-dev’s Dev UI to locate the root agent at runtime.
+- Root agent: org.example.agents.multitool.TravelConciergeAgent defines a public static final BaseAgent ROOT_AGENT. This is a convention used by google-adk-dev’s Dev UI to locate the root agent at runtime.
 - Agent design: Keep each agent in its own class. Encapsulate tools as static methods on the agent and register them with FunctionTool.create(...).
 - Prompts/resources: Prompt instructions should reside under src/main/resources and be loaded at runtime (DRY). The current sample inlines instruction text for brevity; when extending, move it to a dedicated prompt file (e.g., src/main/resources/prompts/multi_tool_agent.txt) and load it with Files.readString in a small helper to avoid duplication.
 - Principles: Apply DRY and YAGNI. Keep tool signatures minimal and typed via @Schema for clear auto-generated tool specs.
 
 Running the Agent
-- Console mode: MultiToolAgent contains a main method wired with InMemoryRunner for quick manual testing from the console. Run from your IDE (Java Application) with the working directory at the project root. Type quit to exit.
+- Console mode: TravelConciergeAgent contains a main method wired with InMemoryRunner for quick manual testing from the console. Run from your IDE (Java Application) with the working directory at the project root. Type quit to exit.
 - Dev UI: With google-adk-dev on the classpath and ROOT_AGENT exposed, the Dev UI can introspect the project and interact with the agent. Launch the Dev UI per your team’s ADK setup (the Dev UI is not launched by this repo). Ensure the app providing the Dev UI can see this classpath and that ROOT_AGENT is accessible.
 - Web server (Dev UI host): You can start the ADK web server with Maven:
   mvn exec:java -Dexec.mainClass="com.google.adk.web.AdkWebServer" -Dexec.args="--adk.agents.source-dir=src/main/java" -Dexec.classpathScope="compile"
@@ -36,10 +40,10 @@ Testing
   public class SmokeTest {
       @Test
       void timeAndWeatherBasic() {
-          Map<String, String> time = MultiToolAgent.getCurrentTime("New York");
+          Map<String, String> time = TravelConciergeAgent.getCurrentTime("New York");
           assertEquals("success", time.get("status"));
 
-          Map<String, String> weather = MultiToolAgent.getWeather("New York");
+          Map<String, String> weather = TravelConciergeAgent.getWeather("New York");
           assertEquals("success", weather.get("status"));
       }
   }

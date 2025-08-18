@@ -18,12 +18,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Scanner;
 
-public class MultiToolAgent {
+public class TravelConciergeAgent {
 
     private static String USER_ID = "student";
-    private static String NAME = "multi_tool_agent";
+    private static String NAME = "multi_tool_agent"; // Keeping name stable for Dev UI; rename if desired
 
-    // The run your agent with Dev UI, the ROOT_AGENT should be a global public static final variable.
+    // To run your agent with Dev UI, the ROOT_AGENT should be a global public static final variable.
     public static final BaseAgent ROOT_AGENT = initAgent();
 
     public static BaseAgent initAgent() {
@@ -35,8 +35,8 @@ public class MultiToolAgent {
                         "You are a helpful agent who can answer user questions about the time and weather"
                                 + " in a city.")
                 .tools(
-                        FunctionTool.create(MultiToolAgent.class, "getCurrentTime"),
-                        FunctionTool.create(MultiToolAgent.class, "getWeather"))
+                        FunctionTool.create(TravelConciergeAgent.class, "getCurrentTime"),
+                        FunctionTool.create(TravelConciergeAgent.class, "getWeather"))
                 .build();
     }
 

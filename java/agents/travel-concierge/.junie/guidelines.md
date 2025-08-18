@@ -18,6 +18,8 @@ Project Layout and Conventions
 Running the Agent
 - Console mode: MultiToolAgent contains a main method wired with InMemoryRunner for quick manual testing from the console. Run from your IDE (Java Application) with the working directory at the project root. Type quit to exit.
 - Dev UI: With google-adk-dev on the classpath and ROOT_AGENT exposed, the Dev UI can introspect the project and interact with the agent. Launch the Dev UI per your team’s ADK setup (the Dev UI is not launched by this repo). Ensure the app providing the Dev UI can see this classpath and that ROOT_AGENT is accessible.
+- Web server (Dev UI host): You can start the ADK web server with Maven:
+  mvn exec:java -Dexec.mainClass="com.google.adk.web.AdkWebServer" -Dexec.args="--adk.agents.source-dir=src/main/java" -Dexec.classpathScope="compile"
 
 Testing
 - Framework: JUnit 5 (junit-jupiter-api + junit-jupiter-engine) is configured in pom.xml. Maven Surefire is pinned to a version compatible with Java 21.

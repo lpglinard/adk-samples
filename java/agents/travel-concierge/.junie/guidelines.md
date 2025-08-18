@@ -69,3 +69,14 @@ Maven Configuration (key excerpts)
 Housekeeping
 - Keep sample prompts and tools minimal. Avoid adding external dependencies unless necessary for a concrete feature.
 - If you temporarily add demo tests, remove them before committing if they are not intended to be part of the permanent suite. The example above was verified locally and then removed, as this repo focuses on the agent sample itself.
+
+Logging
+- Never use System.out.print, System.out.println, or System.err for application logging. Prefer java.util.logging Logger and consistent log levels.
+- Define a class-level logger like:
+
+  private static final Logger ADK_LOGGER = Logger.getLogger(TravelConciergeAgent.class.getName());
+
+- Use ADK_LOGGER.info(...), ADK_LOGGER.warning(...), ADK_LOGGER.severe(...), etc., instead of print statements.
+- Keep sensitive information out of logs. Log IDs or hashes instead of raw tokens/keys.
+- For temporary local debugging, prefer Logger at FINE/FINEST levels and adjust the handler configuration if needed rather than adding print statements.
+

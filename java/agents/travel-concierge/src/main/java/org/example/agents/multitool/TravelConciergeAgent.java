@@ -10,6 +10,7 @@ import com.google.adk.tools.FunctionTool;
 import com.google.genai.types.Content;
 import com.google.genai.types.Part;
 import io.reactivex.rxjava3.core.Flowable;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.time.ZoneId;
@@ -17,14 +18,31 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
 public class TravelConciergeAgent {
 
     public static final String DESCRIPTION = "Agent to answer questions about the time and weather in a city.";
-    public static final String INSTRUCTION = "You are a helpful agent who can answer user questions about the time and weather in a city.";
+    public static final String INSTRUCTION = loadInstruction();
     public static final String MODEL = "gemini-2.5-flash";
+
+    private static final Logger ADK_LOGGER = Logger.getLogger(TravelConciergeAgent.class.getName());
+
     private static String USER_ID = "student";
     private static String NAME = "multi_tool_agent"; // Keeping name stable for Dev UI; rename if desired
+
+    private static String loadInstruction() {
+        String fallback = "You are a helpful agent who can answer user questions about the time and weather in a city.";
+        String resourcePath = "prompts/multi_tool_agent.txt";
+        try (var in = TravelConciergeAgent.class.getClassLoader().getResourceAsStream(resourcePath)) {
+            if (in == null) {
+                return fallback;
+            }
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
+        } catch (IOException e) {
+            return fallback;
+        }
+    }
 
     // To run your agent with Dev UI, the ROOT_AGENT should be a global public static final variable.
     public static final BaseAgent ROOT_AGENT = initAgent();

@@ -20,6 +20,9 @@ import java.util.Scanner;
 
 public class TravelConciergeAgent {
 
+    public static final String DESCRIPTION = "Agent to answer questions about the time and weather in a city.";
+    public static final String INSTRUCTION = "You are a helpful agent who can answer user questions about the time and weather in a city.";
+    public static final String MODEL = "gemini-2.5-flash";
     private static String USER_ID = "student";
     private static String NAME = "multi_tool_agent"; // Keeping name stable for Dev UI; rename if desired
 
@@ -29,11 +32,9 @@ public class TravelConciergeAgent {
     public static BaseAgent initAgent() {
         return LlmAgent.builder()
                 .name(NAME)
-                .model("gemini-2.0-flash")
-                .description("Agent to answer questions about the time and weather in a city.")
-                .instruction(
-                        "You are a helpful agent who can answer user questions about the time and weather"
-                                + " in a city.")
+                .model(MODEL)
+                .description(DESCRIPTION)
+                .instruction(INSTRUCTION)
                 .tools(
                         FunctionTool.create(TravelConciergeAgent.class, "getCurrentTime"),
                         FunctionTool.create(TravelConciergeAgent.class, "getWeather"))

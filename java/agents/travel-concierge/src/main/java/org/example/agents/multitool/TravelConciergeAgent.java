@@ -29,38 +29,38 @@ import org.example.agents.multitool.tools.MemoryTools;
 public class TravelConciergeAgent {
 
     public static final String DESCRIPTION = "Agent to answer questions about the time and weather in a city.";
-    public static final String INSTRUCTION = loadInstruction();
-    public static final String MODEL = "gemini-2.5-flash";
-
     private static final Logger ADK_LOGGER = Logger.getLogger(TravelConciergeAgent.class.getName());
+    public static final String INSTRUCTION = loadInstruction();
+    public static final String MODEL = "gemini-2.0-flash";
 
     private static String USER_ID = "student";
     private static String NAME = "multi_tool_agent"; // Keeping name stable for Dev UI; rename if desired
 
     private static String loadInstruction() {
+        Logger logger = Logger.getLogger(TravelConciergeAgent.class.getName());
         String fallback = "You are a helpful agent who can answer user questions about the time and weather in a city.";
         String resourcePath = "prompts/travel_concierge_agent.txt";
         try (var in = TravelConciergeAgent.class.getClassLoader().getResourceAsStream(resourcePath)) {
             if (in == null) {
-                ADK_LOGGER.warning("Instruction prompt resource not found at: " + resourcePath + ". Using fallback instruction.");
+                logger.warning("Instruction prompt resource not found at: " + resourcePath + ". Using fallback instruction.");
                 return fallback;
             }
             String instruction = new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
-            ADK_LOGGER.fine("Loaded instruction from resource. Length=" + instruction.length());
+            logger.fine("Loaded instruction from resource. Length=" + instruction.length());
             return instruction;
         } catch (IOException e) {
-            ADK_LOGGER.log(Level.WARNING, "Failed to load instruction prompt. Using fallback.", e);
+            logger.log(Level.WARNING, "Failed to load instruction prompt. Using fallback.", e);
             return fallback;
         }
     }
-
-    // To run your agent with Dev UI, the ROOT_AGENT should be a global public static final variable.
-    public static final BaseAgent ROOT_AGENT = initAgent();
 
     // Shared memory service and tools (instance-based) so we can share state across tools/agents
     private static final SharedStateService SHARED_STATE = new SharedStateService();
     private static final MemoryTools MEMORY_TOOLS = new MemoryTools(SHARED_STATE);
     private static final MemoryBootstrap MEMORY_BOOTSTRAP = new MemoryBootstrap(SHARED_STATE);
+
+    // To run your agent with Dev UI, the ROOT_AGENT should be a global public static final variable.
+    public static final BaseAgent ROOT_AGENT = initAgent();
 
     public static BaseAgent initAgent() {
         ADK_LOGGER.info("Initializing TravelConciergeAgent with model=" + MODEL + ", name=" + NAME);
@@ -69,6 +69,22 @@ public class TravelConciergeAgent {
                 .model(MODEL)
                 .description(DESCRIPTION)
                 .instruction(INSTRUCTION)
+                .beforeAgentCallback(ctx -> {
+                    try {
+                        String sid = extractSessionId(ctx);
+                        if (sid != null && !sid.isBlank()) {
+                            MEMORY_BOOTSTRAP.bootstrap(sid);
+                            if (ADK_LOGGER.isLoggable(Level.FINE)) {
+                                ADK_LOGGER.fine("beforeAgentCallback: bootstrapped memory for session=" + sid);
+                            }
+                        } else {
+                            ADK_LOGGER.fine("beforeAgentCallback: unable to resolve session id from context; skipping bootstrap.");
+                        }
+                    } catch (Exception e) {
+                        ADK_LOGGER.log(Level.WARNING, "beforeAgentCallback: bootstrap failed; continuing.", e);
+                    }
+                    return io.reactivex.rxjava3.core.Maybe.empty();
+                })
                 .tools(
                         FunctionTool.create(TravelConciergeAgent.class, "getCurrentTime"),
                         FunctionTool.create(TravelConciergeAgent.class, "getWeather"),
@@ -79,6 +95,53 @@ public class TravelConciergeAgent {
                 .build();
         ADK_LOGGER.info("TravelConciergeAgent initialized. Tools registered: getCurrentTime, getWeather, memorize, memorizeList, forget");
         return agent;
+    }
+
+    // Best-effort extractor to accommodate ADK 0.2.0 callback context differences without tight coupling.
+    private static String extractSessionId(Object ctx) {
+        if (ctx == null) return null;
+        try {
+            // Try ctx.sessionId()
+            var m = ctx.getClass().getMethod("sessionId");
+            Object v = m.invoke(ctx);
+            return v != null ? String.valueOf(v) : null;
+        } catch (Exception ignored) {}
+        try {
+            // Try ctx.getSessionId()
+            var m = ctx.getClass().getMethod("getSessionId");
+            Object v = m.invoke(ctx);
+            return v != null ? String.valueOf(v) : null;
+        } catch (Exception ignored) {}
+        try {
+            // Try ctx.session().id()/getId()
+            var sm = ctx.getClass().getMethod("session");
+            Object session = sm.invoke(ctx);
+            if (session != null) {
+                try {
+                    var idm = session.getClass().getMethod("id");
+                    Object v = idm.invoke(session);
+                    return v != null ? String.valueOf(v) : null;
+                } catch (Exception ignored2) {}
+                try {
+                    var idm = session.getClass().getMethod("getId");
+                    Object v = idm.invoke(session);
+                    return v != null ? String.valueOf(v) : null;
+                } catch (Exception ignored3) {}
+            }
+        } catch (Exception ignored) {}
+        try {
+            // Try ctx.event().sessionId()
+            var em = ctx.getClass().getMethod("event");
+            Object event = em.invoke(ctx);
+            if (event != null) {
+                try {
+                    var sidm = event.getClass().getMethod("sessionId");
+                    Object v = sidm.invoke(event);
+                    return v != null ? String.valueOf(v) : null;
+                } catch (Exception ignored2) {}
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 
     public static Map<String, String> getCurrentTime(
